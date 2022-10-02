@@ -15,6 +15,50 @@
 //   return adjustedDescriptor;
 // };
 
+//  Form Validation
+interface ValueToBeValidated {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
+const HandleValidation = (validatableInput: ValueToBeValidated) => {
+  let isValid = true;
+  if (validatableInput.required) {
+    isValid = isValid && validatableInput.value.toString().trim().length !== 0;
+  }
+  if (
+    validatableInput.minLength != null &&
+    typeof validatableInput.value === "string"
+  ) {
+    isValid =
+      isValid && validatableInput.value.length >= validatableInput.minLength;
+  }
+  if (
+    validatableInput.maxLength != null &&
+    typeof validatableInput.value === "string"
+  ) {
+    isValid =
+      isValid && validatableInput.value.length <= validatableInput.maxLength;
+  }
+  if (
+    validatableInput.min != null &&
+    typeof validatableInput.value === "number"
+  ) {
+    isValid = isValid && validatableInput.value >= validatableInput.min;
+  }
+  if (
+    validatableInput.max != null &&
+    typeof validatableInput.value === "number"
+  ) {
+    isValid = isValid && validatableInput.value <= validatableInput.max;
+  }
+  return isValid;
+};
+
 // ProjectInput Class
 class ProjectInput {
   templateElement: HTMLTemplateElement;
@@ -68,7 +112,7 @@ class ProjectInput {
     this.clearInputContent();
   };
 
-  //******     Methods Definitions
+  //******     Method Definitions
   private configure = () => {
     this.element.addEventListener("submit", this.submitHandler);
   };
@@ -78,10 +122,26 @@ class ProjectInput {
     const enteredDescription = this.descriptionInputElement.value;
     const enteredPeople = this.peopleInputElement.value;
 
+    const titleToBeValidated: ValueToBeValidated = {
+      value: enteredTitle,
+      required: true,
+    };
+    const descriptionToBeValidated: ValueToBeValidated = {
+      value: enteredDescription,
+      required: true,
+      minLength: 5,
+    };
+    const peopleToBeValidated: ValueToBeValidated = {
+      value: +enteredPeople,
+      required: true,
+      min: 1,
+      max: 5,
+    };
+
     if (
-      enteredTitle.trim().length === 0 ||
-      enteredDescription.trim().length === 0 ||
-      enteredPeople.trim().length === 0
+      !HandleValidation(titleToBeValidated) ||
+      !HandleValidation(descriptionToBeValidated) ||
+      !HandleValidation(peopleToBeValidated)
     ) {
       alert("Please fill the form.");
     } else {
