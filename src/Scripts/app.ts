@@ -25,7 +25,7 @@ class Project {
 	) {}
 }
 
-// State Management Clas
+// State Management Class
 type Listener<T> = (items: T[]) => void;
 
 class State<T> {
@@ -60,6 +60,18 @@ class ProjectState extends State<Project> {
 			ProjectStatus.Active
 		);
 		this.projects.push(newProject);
+		this.updadeListeners();
+	};
+
+	moveProject(projectId: string, newStatus: ProjectStatus) {
+		const project = this.projects.find((prj) => prj.id === projectId);
+		if (project && project.status !== newStatus) {
+			project.status = newStatus;
+			this.updadeListeners();
+		}
+	}
+
+	updadeListeners = () => {
 		for (const listenerFn of this.listeners) {
 			listenerFn(this.projects.slice());
 		}
@@ -113,7 +125,6 @@ const HandleValidation = (validatableInput: ValueToBeValidated) => {
 };
 
 // Base Component Class
-
 abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 	templateElement: HTMLTemplateElement;
 	hostElement: T;
@@ -175,10 +186,11 @@ class ProjectItem
 		this.renderContent();
 	}
 	dragStartHandler = (event: DragEvent) => {
-		console.log(event);
+		event.dataTransfer!.setData("text/plain", this.project.id);
+		event.dataTransfer!.effectAllowed = "move";
 	};
 	dragEndHandler = (event: DragEvent) => {
-		console.log("Triggered");
+		console.log(" Drag has been triggered");
 	};
 
 	configure = () => {
@@ -209,11 +221,20 @@ class ProjectList
 	}
 
 	dragOverHandler = (event: DragEvent) => {
-		const listEl = this.element.querySelector("ul")!;
-		listEl.classList.add("droppable");
+		if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
+			event.preventDefault();
+			const listEl = this.element.querySelector("ul")!;
+			listEl.classList.add("droppable");
+		}
 	};
 
-	dropHandler = (event: DragEvent) => {};
+	dropHandler = (event: DragEvent) => {
+		const prjId = event.dataTransfer!.getData("text/plain");
+		ProjectStateInstance.moveProject(
+			prjId,
+			this.type === "active" ? ProjectStatus.Active : ProjectStatus.Finished
+		);
+	};
 
 	dragLeaveHandler = (event: DragEvent) => {
 		const listEl = this.element.querySelector("ul")!;
